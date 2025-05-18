@@ -62,7 +62,6 @@ testlogs/
 
 # Put local stuff here
 local/
-data/
 
 /bin/.cp
 
