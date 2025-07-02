@@ -1,22 +1,26 @@
+package foo
+
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}
 import scala3encoders.given
 
 
-@main def main(): Unit = {
+@main def main(filepath: String): Unit = {
   val spark = SparkSession
     .builder()
-    .appName("Spark SQL basic example")
-    .config("spark.master", "local[*]")
+    .appName("instacart-map-reduce")
+//    .config("spark.master", "local[*]")
     .getOrCreate()
 
+
+  println(f"test test test $filepath")
   val schema = scala3encoders.encoder[Purchase].schema
-  val purchases = spark.read.schema(schema).csv("local/order_products.csv").as[Purchase]
+  val purchases = spark.read.schema(schema).csv(filepath).as[Purchase]
   purchases.printSchema()
 
-  val pairs = purchases.groupByKey(_.orderId).flatMapGroups { case (orderId, iter) =>
-    iter.map(_.itemId).toSet.toSeq.sorted.combinations(2).collect { case Seq(a, b) => (a, b) }.toSeq
+  val pairs = purchases.groupByKey(_.orderId).flatMapGroups { case (_, iter) =>
+    iter.map(_.itemId).toSet.toSeq.sorted.combinations(2).collect { case Seq(a, b) => (a, b) }
   }
 
   val counts = pairs
