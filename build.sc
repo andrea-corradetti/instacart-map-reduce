@@ -7,7 +7,8 @@ object foo extends ScalaModule {
   def scalaVersion = "2.12.18"
 
   override def ivyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:2.13.17-M1"
+    ivy"org.scala-lang:scala-reflect:2.13.17-M1",
+    ivy"com.github.scopt::scopt:4.1.1-M3"
   )
 
   override def compileIvyDeps = Agg(
