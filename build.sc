@@ -4,22 +4,21 @@ import mill._
 import mill.scalalib._
 
 object foo extends ScalaModule {
-  def scalaVersion = "3.3.6"
+  def scalaVersion = "2.12.18"
 
   override def ivyDeps = Agg(
-    ivy"io.github.vincenzobaz::spark-scala3-encoders:0.2.6",
-    ivy"io.github.vincenzobaz::spark-scala3-udf:0.2.6",
-    ivy"org.apache.spark::spark-core:3.5.5".withDottyCompat(scalaVersion()),
-    ivy"org.apache.spark::spark-sql:3.5.5".withDottyCompat(scalaVersion()),
+    ivy"org.scala-lang:scala-reflect:2.13.17-M1"
   )
 
-//  override def compileIvyDeps = Agg(
-//
-//  )
+  override def compileIvyDeps = Agg(
+    ivy"org.apache.spark::spark-core:3.5.5",
+    ivy"org.apache.spark::spark-sql:3.5.5",
+  )
 
   override def forkArgs = Seq("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
 
   override def prependShellScript = ""
+
 
   object test extends ScalaTests {
     override def ivyDeps = Agg(ivy"com.lihaoyi::utest:0.8.5")

@@ -1,38 +1,34 @@
 package foo
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.{StructField, StructType}
-import scala3encoders.given
+import org.apache.spark.sql.{Encoders, SparkSession}
 
+object Main {
+  def main(args: Array[String]): Unit = {
+    val spark = SparkSession
+      .builder()
+      .appName("instacart-map-reduce")
+      //    .config("spark.master", "local[*]")
+      .getOrCreate()
 
-@main def main(filepath: String): Unit = {
-  val spark = SparkSession
-    .builder()
-    .appName("instacart-map-reduce")
-//    .config("spark.master", "local[*]")
-    .getOrCreate()
+    val filepath = args(0)
 
+    import spark.implicits._
 
-  println(f"test test test $filepath")
-  val schema = scala3encoders.encoder[Purchase].schema
-  val purchases = spark.read.schema(schema).csv(filepath).as[Purchase]
-  purchases.printSchema()
+    val schema = Encoders.product[Purchase].schema
+    val purchases = spark.read.schema(schema).csv(filepath).as[Purchase]
+    purchases.printSchema()
 
-  val pairs = purchases.groupByKey(_.orderId).flatMapGroups { case (_, iter) =>
-    iter.map(_.itemId).toSet.toSeq.sorted.combinations(2).collect { case Seq(a, b) => (a, b) }
+    val combinations = purchases.groupByKey(_.orderId).flatMapGroups { (_, iter) =>
+      iter.map(_.itemId).toSet.toSeq.combinations(2).map { case Seq(itemA, itemB) => (itemA, itemB) }
+    }
+
+    val counts = combinations.groupByKey(identity).count().sort($"count(1)".desc)
+
+    val writableDf = counts
+      .map { case ((a, b), count) => (a, b, count) }
+      .toDF("item1", "item2", "count")
+
+    writableDf.write.csv("local/out/counts_sorted")
+    println(writableDf.take(10).mkString("- ", "\n- ", "\n---"))
   }
-
-  val counts = pairs
-    .groupByKey(identity)
-    .count()
-    .orderBy(col("count(1)").desc)
-
-  val writableDf = counts
-    .map { case ((a, b), count) => (a, b, count) }
-    .toDF("item1", "item2", "count")
-
-  writableDf.write.csv("local/out/counts_sorted")
-  println(writableDf.take(10).mkString("- ", "\n- ", "\n---"))
 }
-
