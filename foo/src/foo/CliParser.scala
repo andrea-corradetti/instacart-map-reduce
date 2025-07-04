@@ -5,8 +5,8 @@ import scopt.OParser
 import java.io.File
 
 case class Config(
-    input: File = new File("."),
-    output: File = new File("."),
+    input: String = "",
+    output: String = "",
     verbose: Boolean = false
 )
 
@@ -16,14 +16,14 @@ object CliParser {
     import builder._
     OParser.sequence(
       programName("instacart-map-reduce"),
-      opt[File]('i', "input")
+      opt[String]('i', "input")
         .required()
-        .valueName("<file>")
+        .valueName("<path>")
         .action((x, c) => c.copy(input = x))
         .text("input file is required"),
-      opt[File]('o', "output")
+      opt[String]('o', "output")
         .required()
-        .valueName("<file>")
+        .valueName("<path>")
         .action((x, c) => c.copy(output = x))
         .text("output location is required"),
       opt[Unit]('v', "verbose")

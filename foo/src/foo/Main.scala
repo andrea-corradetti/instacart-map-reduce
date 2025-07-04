@@ -17,7 +17,7 @@ object Main {
     import spark.implicits._
 
     val schema = Encoders.product[Purchase].schema
-    val purchases = spark.read.schema(schema).csv(config.input.getPath).as[Purchase]
+    val purchases = spark.read.schema(schema).csv(config.input).as[Purchase]
     purchases.printSchema()
 
     val combinations = purchases.groupByKey(_.orderId).flatMapGroups { (_, iter) =>
@@ -30,7 +30,7 @@ object Main {
       .map { case ((a, b), count) => (a, b, count) }
       .toDF("item1", "item2", "count")
 
-    writableDf.write.csv(config.output.getPath)
+    writableDf.write.csv(config.output)
 
 
     println(writableDf.take(10).mkString("- ", "\n- ", "\n---"))
