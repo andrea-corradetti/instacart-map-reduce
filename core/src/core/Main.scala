@@ -1,12 +1,15 @@
 package core
 
-import org.apache.spark.sql.{Encoders, SparkSession}
+import com.typesafe.scalalogging.Logger
+import org.apache.spark.sql.{Encoders, SaveMode, SparkSession}
 
 object Main {
+  private val logger = Logger(getClass.getName)
+
   def main(args: Array[String]): Unit = {
     val config = CliParser.parse(args) match {
       case Some(c) => c
-      case None => sys.exit()
+      case None    => sys.exit(1)
     }
 
     val spark = SparkSession
@@ -18,21 +21,41 @@ object Main {
 
     val schema = Encoders.product[Purchase].schema
     val purchases = spark.read.schema(schema).csv(config.input).as[Purchase]
-    purchases.printSchema()
 
-    val combinations = purchases.groupByKey(_.orderId).flatMapGroups { (_, iter) =>
-      iter.map(_.itemId).toSet.toSeq.sorted.combinations(2).map { case Seq(itemA, itemB) => (itemA, itemB) }
-    }
+    logger.info(s"""Using Schema:
+        |${purchases.schema.treeString}
+        |""".stripMargin)
 
-    val counts = combinations.groupByKey(identity).count().sort($"count(1)".desc)
+
+    /*Note: Sorting in spark is very expensive and might require data shuffling.
+    * To avoid this, we first make combinations and then "sort" the item ids in the tuples
+    * */
+    val combinations =
+      purchases.groupByKey(_.orderId).flatMapGroups { (_, iter) =>
+        iter.toStream.distinct.map(_.itemId).combinations(2).map {
+          case Seq(itemA, itemB) => if (itemA <= itemB) (itemA, itemB) else (itemB, itemA)
+        }
+      }
+
+    val counts =
+      combinations.groupByKey(identity).count().sort($"count(1)".desc)
 
     val writableDf = counts
       .map { case ((a, b), count) => (a, b, count) }
       .toDF("item1", "item2", "count")
 
-    writableDf.write.csv(config.output)
+    val head = writableDf.take(10)
 
+    logger.info(s"""Printing first 10:
+        |${head.mkString("- ", "\n- ", "\n---")}
+        |""".stripMargin)
 
-    println(writableDf.take(10).mkString("- ", "\n- ", "\n---"))
+    val saveMode =
+      if (config.forceWrite) SaveMode.Overwrite else SaveMode.ErrorIfExists
+
+    logger.info(
+      s"Writing to ${config.output} with force-write=${config.forceWrite}"
+    )
+    writableDf.write.mode(saveMode).csv(config.output)
   }
 }

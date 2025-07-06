@@ -1,16 +1,17 @@
 package core
 
+import com.typesafe.scalalogging.Logger
 import scopt.OParser
-
-import java.io.File
 
 case class Config(
     input: String = "",
     output: String = "",
-    verbose: Boolean = false
+    forceWrite: Boolean = false
 )
 
 object CliParser {
+  private val logger = Logger(getClass.getName)
+
   private val builder = OParser.builder[Config]
   private val parser = {
     import builder._
@@ -26,18 +27,18 @@ object CliParser {
         .valueName("<path>")
         .action((x, c) => c.copy(output = x))
         .text("output location is required"),
-      opt[Unit]('v', "verbose")
-        .action((_, c) => c.copy(verbose = true))
-        .text("enable verbose mode")
+      opt[Unit]('f', "force-write")
+        .action((_, c) => c.copy(forceWrite = true))
+        .text("overwrite output directory.")
     )
   }
 
   def parse(args: Array[String]): Option[Config] =
     OParser.parse(parser, args, Config()) match {
       case Some(config) =>
-        println(s"Input: ${config.input}")
-        println(s"Output: ${config.output}")
-        println(s"Verbose: ${config.verbose}")
+        logger.debug(s"Input: ${config.input}")
+        logger.debug(s"Output: ${config.output}")
+        logger.debug(s"ForceWrite: ${config.forceWrite}")
         Some(config)
       case _ =>
         None // arguments are bad, error message will have been displayed
