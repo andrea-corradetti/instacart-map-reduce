@@ -3,7 +3,7 @@ package build
 import mill._
 import mill.scalalib._
 
-object foo extends ScalaModule {
+object core extends ScalaModule {
   def scalaVersion = "2.12.18"
 
   override def ivyDeps = Agg(

@@ -1,4 +1,4 @@
-package foo
+package core
 
 import org.apache.spark.sql.{Encoders, SparkSession}
 
