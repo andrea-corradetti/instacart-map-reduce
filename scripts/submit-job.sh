@@ -9,7 +9,8 @@ echo "🚀 Submitting Spark job to Dataproc..."
 JAR_NAME="${JAR_NAME:-imr.jar}"
 JAR_PATH="${JAR_PATH:-"$BUCKET"/jars/"$JAR_NAME"}"
 INPUT_URI="${INPUT_URI:-"$BUCKET"/order_products.csv}"
-OUTPUT_URI="${OUTPUT_URI:-"$BUCKET"/out2}"
+OUTPUT_DIR="${1:-latest}"
+OUTPUT_URI="${OUTPUT_URI:-"$BUCKET"/out/"$OUTPUT_DIR"}"
 
 gcloud dataproc jobs submit spark \
   --cluster "$CLUSTER" \

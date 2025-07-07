@@ -33,16 +33,23 @@ while [[ $# -gt 0 ]]; do
 done
 
 IMAGE_VERSION="${IMAGE_VERSION:-2.2-debian11}"
+LOG_DIR="$BUCKET"/spark-job-history
 
 if [[ "$ACTION" == "create" ]]; then
   echo "🛠️ Creating cluster '$CLUSTER' with $NUM_WORKERS workers..."
 
+
   gcloud dataproc clusters create "$CLUSTER" \
+    --metric-sources spark \
+    --enable-component-gateway \
     --region "$REGION" \
     --image-version "$IMAGE_VERSION" \
     --master-boot-disk-size 100 \
     --worker-boot-disk-size 100 \
-    --num-workers "$NUM_WORKERS"
+    --master-machine-type n4-standard-4 \
+    --worker-machine-type n4-standard-4 \
+    --num-workers "$NUM_WORKERS" \
+    --properties spark:spark.history.fs.logDirectory="$LOG_DIR",spark:spark.eventLog.dir="$LOG_DIR"
 
 
   echo "✅ Cluster created."
