@@ -27,9 +27,6 @@ object Main {
         |""".stripMargin)
 
 
-    /*Note: Sorting in spark is very expensive and might require data shuffling.
-    * To avoid this, we first make combinations and then "sort" the item ids in the tuples
-    * */
     val combinations =
       purchases.groupByKey(_.orderId).flatMapGroups { (_, iter) =>
         iter.toStream.distinct.map(_.itemId).combinations(2).map {
