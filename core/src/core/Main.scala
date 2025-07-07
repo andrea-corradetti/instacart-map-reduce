@@ -42,13 +42,13 @@ object Main {
 
     val writableDf = counts
       .map { case ((a, b), count) => (a, b, count) }
-      .toDF("item1", "item2", "count")
+      .toDF("item1", "item2", "count").cache()
 
     val head = writableDf.take(10)
 
     logger.info(s"""Printing first 10:
-        |${head.mkString("- ", "\n- ", "\n---")}
-        |""".stripMargin)
+                   |${head.mkString("- ", "\n- ", "\n---")}
+                   |""".stripMargin)
 
     val saveMode =
       if (config.forceWrite) SaveMode.Overwrite else SaveMode.ErrorIfExists
@@ -57,5 +57,7 @@ object Main {
       s"Writing to ${config.output} with force-write=${config.forceWrite}"
     )
     writableDf.write.mode(saveMode).csv(config.output)
+
+    spark.stop()
   }
 }
