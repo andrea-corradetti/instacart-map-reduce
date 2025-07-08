@@ -6,7 +6,8 @@ import scopt.OParser
 case class Config(
     input: String = "",
     output: String = "",
-    forceWrite: Boolean = false
+    forceWrite: Boolean = false,
+    useRdd: Boolean = false
 )
 
 object CliParser {
@@ -29,7 +30,10 @@ object CliParser {
         .text("output location is required"),
       opt[Unit]('f', "force-write")
         .action((_, c) => c.copy(forceWrite = true))
-        .text("overwrite output directory.")
+        .text("overwrite output directory."),
+      opt[Unit]("use-rdd")
+        .action((_, c) => c.copy(useRdd = true))
+        .text("use rdd instead of dataset.")
     )
   }
 
