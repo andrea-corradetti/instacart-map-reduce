@@ -59,6 +59,7 @@ if [[ "$ACTION" == "create" ]]; then
   PROPERTIES=spark:spark.history.fs.logDirectory="$LOG_DIR"
   PROPERTIES+=,spark:spark.eventLog.dir="$LOG_DIR"
   PROPERTIES+=,spark:spark.history.custom.executor.log.url.applyIncompleteApplication=false
+  # shellcheck disable=SC1083
   PROPERTIES+=,spark:spark.history.custom.executor.log.url={{YARN_LOG_SERVER_URL}}/{{NM_HOST}}:{{NM_PORT}}/{{CONTAINER_ID}}/{{CONTAINER_ID}}/{{USER}}/{{FILE_NAME}}
   PROPERTIES+=,spark:spark.default.parallelism=$((NUM_WORKERS * N_CORES))
 
