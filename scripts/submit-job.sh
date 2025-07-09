@@ -9,9 +9,16 @@ echo "🚀 Submitting Spark job to Dataproc..."
 CLUSTER_NAME="${CLUSTER:-}"
 JOB_ID=""
 
-# Parse optional flags
+JAR_ARGS=()
+
+# Separate script args and jar args
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --)
+      shift
+      JAR_ARGS+=("$@")
+      break
+      ;;
     --cluster)
       CLUSTER_NAME="$2"
       shift 2
@@ -22,7 +29,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "❌ Unknown option: $1"
-      echo "Usage: $0 [--cluster CLUSTER_NAME] [--id JOB_ID]"
+      echo "Usage: $0 [--cluster CLUSTER_NAME] [--id JOB_ID] [-- <JAR_ARGS>...]"
       exit 1
       ;;
   esac
@@ -43,6 +50,7 @@ echo "📥 Input URI:        $INPUT_URI"
 echo "📤 Output URI:       $OUTPUT_URI"
 echo "☁️ Cluster:          $CLUSTER_NAME"
 [[ -n "$JOB_ID" ]] && echo "🆔 Job ID:           $JOB_ID"
+[[ "${#JAR_ARGS[@]}" -gt 0 ]] && echo "📎 Jar Args:         ${JAR_ARGS[*]}"
 
 ARGS=(
   --cluster "$CLUSTER_NAME"
@@ -55,12 +63,14 @@ if [[ -n "$JOB_ID" ]]; then
   ARGS+=(--id "$JOB_ID")
 fi
 
-JOB_ARGS=(
+JAR_ARGS+=(
   --input "$INPUT_URI"
   --output "$OUTPUT_URI"
   --force-write
 )
 
-gcloud dataproc jobs submit spark "${ARGS[@]}" -- "${JOB_ARGS[@]}"
+# Combine job args and jar args
+
+gcloud dataproc jobs submit spark "${ARGS[@]}" -- "${JAR_ARGS[@]}"
 
 echo "✅ Job submitted."
