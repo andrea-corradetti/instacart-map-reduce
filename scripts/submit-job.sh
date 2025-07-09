@@ -52,10 +52,15 @@ echo "☁️ Cluster:          $CLUSTER_NAME"
 [[ -n "$JOB_ID" ]] && echo "🆔 Job ID:           $JOB_ID"
 [[ "${#JAR_ARGS[@]}" -gt 0 ]] && echo "📎 Jar Args:         ${JAR_ARGS[*]}"
 
+
+PROPERTIES=spark.hadoop.mapreduce.outputcommitter.factory.class=org.apache.hadoop.mapreduce.lib.output.DataprocFileOutputCommitterFactory
+PROPERTIES+=,spark.hadoop.mapreduce.fileoutputcommitter.marksuccessfuljobs=false
+
 ARGS=(
   --cluster "$CLUSTER_NAME"
   --region "$REGION"
   --jar "$JAR_PATH"
+  --properties "$PROPERTIES"
 )
 
 # Add optional --id flag if provided
