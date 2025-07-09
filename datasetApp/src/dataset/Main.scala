@@ -1,21 +1,20 @@
-package core
+package dataset
 
 import com.typesafe.scalalogging.Logger
-import org.apache.spark.rdd.RDD
+import core.CliParser.getConfigOrExit
+import core.Shared.sortPair
+import core.{Config, Purchase}
 import org.apache.spark.sql._
 
 object Main {
   private val logger = Logger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
-    val config = CliParser.parse(args) match {
-      case Some(c) => c
-      case None    => sys.exit(1)
-    }
+    val config: Config = getConfigOrExit(args)
 
     val spark: SparkSession = SparkSession
       .builder()
-      .appName("instacart-map-reduce")
+      .appName("instacart-map-reduce-ds")
       .getOrCreate()
 
     import spark.implicits._
@@ -27,9 +26,7 @@ object Main {
         |${purchases.schema.treeString}
         |""".stripMargin)
 
-    val writableDf: DataFrame =
-      if (config.useRdd) computeWithRdd(spark)(purchases)
-      else computeWithDataset(spark)(purchases)
+    val writableDf: DataFrame = computeWithDataset(spark)(purchases)
 
     writableDf.cache()
 
@@ -48,7 +45,6 @@ object Main {
 
     spark.stop()
   }
-
 
   private def computeWithDataset(
       spark: SparkSession
@@ -74,40 +70,6 @@ object Main {
       .toDF("item1", "item2", "count")
 
     writableDf
-  }
-
-  private def computeWithRdd(
-      spark: SparkSession
-  )(purchases: Dataset[Purchase]) = {
-    logger.info("Using rdd")
-
-    import spark.implicits._
-
-    val combinations = purchases.rdd
-      .map(p => (p.orderId, p.itemId))
-      .groupByKey()
-      .flatMap { case (_, itemIds) =>
-        itemIds.toStream.distinct.combinations(2).map { case Seq(itemA, itemB) =>
-          sortPair(itemA, itemB)
-        }
-      }
-
-    val counts: RDD[((Int, Int), Int)] = combinations
-      .map(pair => (pair, 1))
-      .reduceByKey(_ + _)
-      .sortBy(_._2)
-
-    //noinspection Duplicates
-    //duplication is lexical but the types are completely different
-    val writableDf: DataFrame = counts
-      .map { case ((a, b), count) => (a, b, count) }
-      .toDF("item1", "item2", "count")
-
-    writableDf
-  }
-
-  private def sortPair(itemA: Int, itemB: Int) = {
-    if (itemA <= itemB) (itemA, itemB) else (itemB, itemA)
   }
 
 }

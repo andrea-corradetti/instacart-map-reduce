@@ -37,14 +37,24 @@ object CliParser {
     )
   }
 
-  def parse(args: Array[String]): Option[Config] =
+  private def parse(args: Array[String]): Option[Config] = {
     OParser.parse(parser, args, Config()) match {
       case Some(config) =>
-        logger.debug(s"Input: ${config.input}")
-        logger.debug(s"Output: ${config.output}")
-        logger.debug(s"ForceWrite: ${config.forceWrite}")
+        logger.debug("Cli Args:")
+        logger.debug(s"|Input: ${config.input}")
+        logger.debug(s"|Output: ${config.output}")
+        logger.debug(s"|ForceWrite: ${config.forceWrite}")
+        logger.debug(s"|use-rdd: ${config.useRdd}")
         Some(config)
       case _ =>
         None // arguments are bad, error message will have been displayed
     }
+  }
+
+  def getConfigOrExit(args: Array[String]): Config =
+    CliParser.parse(args) match {
+      case Some(c) => c
+      case None    => sys.exit(1)
+    }
+
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-MODULE="core"
 TARGET="assembly"
 DEST_JAR_NAME="${JAR_NAME:-imr.jar}"  # Default from .env if available
 
