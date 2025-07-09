@@ -18,9 +18,9 @@ object Main {
 
     val sc = spark.sparkContext
 
-    logger.info(s"Reading from: ${config.input}")
+    logger.info(s"Reading from: ${config.input} into RDD with ${sc.defaultParallelism} partitions")
 
-    val raw = sc.textFile(config.input)
+    val raw = sc.textFile(config.input, sc.defaultParallelism)
 
     val purchases = raw.map { line =>
       val Array(orderId, itemIdStr) = line.split(",", 2)
@@ -28,6 +28,7 @@ object Main {
     }
 
     val resultRDD = computeWithRdd(purchases)
+    resultRDD.cache()
 
     val top10 = resultRDD.take(10)
     logger.info(s"""First 10 results:
