@@ -2,7 +2,8 @@ package rdd
 
 import com.typesafe.scalalogging.Logger
 import core.{CliParser, Config, Purchase, Shared}
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.SparkSession
 
 object Main {
   private val logger = Logger(getClass.getName)
@@ -10,7 +11,8 @@ object Main {
   def main(args: Array[String]): Unit = {
     val config: Config = CliParser.getConfigOrExit(args)
 
-    val spark = SparkSession.builder()
+    val spark = SparkSession
+      .builder()
       .appName("instacart-map-reduce-rdd")
       .getOrCreate()
 
@@ -32,25 +34,32 @@ object Main {
                    |${top10.mkString("- ", "\n- ", "\n---")}
                    |""".stripMargin)
 
-    val saveMode =
-      if (config.forceWrite) SaveMode.Overwrite else SaveMode.ErrorIfExists
-
-    import spark.implicits._
-    val df = spark.createDataset(resultRDD)
-      .toDF("item1", "item2", "count")
+    val csvLines = resultRDD.map { case (item1, item2, count) =>
+      s"$item1,$item2,$count"
+    }
 
     logger.info(
       s"Writing to ${config.output} with force-write=${config.forceWrite}"
     )
 
-    df.write.mode(saveMode).csv(config.output)
+    val fs =
+      FileSystem.get(new java.net.URI(config.output), sc.hadoopConfiguration)
+    val output = new Path(config.output)
 
-    spark.stop()
+    if (config.forceWrite) {
+      fs.delete(output, true)
+    } else if (fs.exists(output)) {
+      throw new RuntimeException(
+        s"Output path ${config.output} already exists and forceWrite=false"
+      )
+    }
+
+    csvLines.saveAsTextFile(config.output)
   }
 
-  private def computeWithRdd(purchases: org.apache.spark.rdd.RDD[Purchase])
-  : org.apache.spark.rdd.RDD[(Int, Int, Long)] = {
-    logger.info("Using RDD")
+  private def computeWithRdd(
+      purchases: org.apache.spark.rdd.RDD[Purchase]
+  ): org.apache.spark.rdd.RDD[(Int, Int, Long)] = {
 
     val combinations = purchases
       .map(p => (p.orderId, p.itemId))
