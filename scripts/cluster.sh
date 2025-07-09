@@ -54,11 +54,14 @@ if [[ "$ACTION" == "create" ]]; then
   echo "🛠️ Creating cluster '$CLUSTER_NAME' with $NUM_WORKERS workers..."
 
   LOG_DIR="$BUCKET"/spark-job-history
+  N_CORES=4
 
   PROPERTIES=spark:spark.history.fs.logDirectory="$LOG_DIR"
   PROPERTIES+=,spark:spark.eventLog.dir="$LOG_DIR"
   PROPERTIES+=,spark:spark.history.custom.executor.log.url.applyIncompleteApplication=false
   PROPERTIES+=,spark:spark.history.custom.executor.log.url={{YARN_LOG_SERVER_URL}}/{{NM_HOST}}:{{NM_PORT}}/{{CONTAINER_ID}}/{{CONTAINER_ID}}/{{USER}}/{{FILE_NAME}}
+  PROPERTIES+=,spark:spark.default.parallelism=$((NUM_WORKERS * N_CORES))
+
 
   COMMON_OPTIONS=(
     --metric-sources spark
@@ -67,8 +70,8 @@ if [[ "$ACTION" == "create" ]]; then
     --image-version "$IMAGE_VERSION"
     --master-boot-disk-size 100
     --worker-boot-disk-size 100
-    --master-machine-type n4-standard-4
-    --worker-machine-type n4-standard-4
+    --master-machine-type n4-standard-"$N_CORES"
+    --worker-machine-type n4-standard-"$N_CORES"
     --properties "$PROPERTIES"
   )
 
