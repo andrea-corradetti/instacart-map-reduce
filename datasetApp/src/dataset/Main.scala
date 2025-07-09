@@ -22,7 +22,7 @@ object Main {
     val schema = Encoders.product[Purchase].schema
     val purchases = spark.read.schema(schema).csv(config.input).as[Purchase]
 
-    logger.info(s"""Using Schema:
+    logger.info(s"""Using dataset with schema:
         |${purchases.schema.treeString}
         |""".stripMargin)
 
@@ -49,8 +49,6 @@ object Main {
   private def computeWithDataset(
       spark: SparkSession
   )(purchases: Dataset[Purchase]) = {
-    logger.info("Using Dataset")
-
     import spark.implicits._
 
     val combinations =
