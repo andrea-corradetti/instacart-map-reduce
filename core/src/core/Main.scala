@@ -53,6 +53,8 @@ object Main {
   private def computeWithDataset(
       spark: SparkSession
   )(purchases: Dataset[Purchase]) = {
+    logger.info("Using Dataset")
+
     import spark.implicits._
 
     val combinations =
@@ -77,6 +79,8 @@ object Main {
   private def computeWithRdd(
       spark: SparkSession
   )(purchases: Dataset[Purchase]) = {
+    logger.info("Using rdd")
+
     import spark.implicits._
 
     val combinations = purchases.rdd
