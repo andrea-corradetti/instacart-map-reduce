@@ -1,0 +1,75 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{3}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[{Apache Spark}(2024)]%
+        {spark-config}
+\bibfield{author}{\bibinfo{person}{{Apache Spark}}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Spark Configuration}.
+\newblock
+  \bibinfo{howpublished}{\url{https://spark.apache.org/docs/3.5.5/configuration.html\#execution-behavior}}.
+\newblock
+\newblock
+\shownote{Accessed: 2025-07-11}.
+
+
+\bibitem[{Google Cloud}(2024a)]%
+        {dataproc-dynalloc}
+\bibfield{author}{\bibinfo{person}{{Google Cloud}}.}
+  \bibinfo{year}{2024}\natexlab{a}.
+\newblock \bibinfo{title}{Tuning Spark Jobs on Dataproc}.
+\newblock
+  \bibinfo{howpublished}{\url{https://cloud.google.com/dataproc/docs/support/spark-job-tuning\#use_dynamic_allocation}}.
+\newblock
+\newblock
+\shownote{Accessed: 2025-07-11}.
+
+
+\bibitem[{Google Cloud}(2024b)]%
+        {dataproc-output}
+\bibfield{author}{\bibinfo{person}{{Google Cloud}}.}
+  \bibinfo{year}{2024}\natexlab{b}.
+\newblock \bibinfo{title}{Viewing and Understanding Dataproc Job Output}.
+\newblock
+  \bibinfo{howpublished}{\url{https://cloud.google.com/dataproc/docs/guides/dataproc-job-output}}.
+\newblock
+\newblock
+\shownote{Accessed: 2025-07-11}.
+
+
+\end{thebibliography}
