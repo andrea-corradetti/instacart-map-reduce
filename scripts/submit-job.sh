@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "❌ Unknown option: $1"
-      echo "Usage: $0 [--cluster CLUSTER_NAME] [--id JOB_ID] [--jar-name FILE] [-- <JAR_ARGS>...]"
+      echo "Usage: $0 [--cluster CLUSTER_NAME] [--id JOB_ID] [--jar-name JAR_NAME] [-- <JAR_ARGS>...]"
       exit 1
       ;;
   esac
@@ -65,7 +65,6 @@ ARGS=(
   --properties "$PROPERTIES"
 )
 
-# Add optional --id flag if provided
 if [[ -n "$JOB_ID" ]]; then
   ARGS+=(--id "$JOB_ID")
 fi
@@ -76,7 +75,6 @@ JAR_ARGS+=(
   --force-write
 )
 
-# Submit the job
 gcloud dataproc jobs submit spark "${ARGS[@]}" -- "${JAR_ARGS[@]}"
 
 echo "✅ Job submitted."
