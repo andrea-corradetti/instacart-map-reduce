@@ -37,7 +37,7 @@ The compiled JAR will be created under `out/<module>/assembly.dest/out.jar`
 ```bash
 spark-submit \
 --class dataset.Main \  # or rdd.Main
---properties-files local/spark.conf \  # enables logging
+--properties-files config/spark.conf \  # enables logging
 --conf spark.master="local[*]" \
 out/datasetApp/assembly.dest/out.jar \  # or out/rddApp/assembly.dest/out.jar 
 --input path/to/order_products.csv \
