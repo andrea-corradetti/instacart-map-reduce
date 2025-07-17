@@ -10,15 +10,6 @@ object shared extends ScalaModule {
     ivy"com.github.scopt::scopt:4.1.1-M3",
     ivy"com.typesafe.scala-logging::scala-logging:3.9.5",
   )
-
-  object test extends ScalaTests {
-    override def ivyDeps = Agg(ivy"com.lihaoyi::utest:0.8.5")
-
-    def testFramework = "utest.runner.Framework"
-
-    override def forkArgs =
-      Seq("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
-  }
 }
 
 object rddApp extends SparkAppModule {
