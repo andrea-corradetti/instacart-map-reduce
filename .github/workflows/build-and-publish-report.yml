@@ -5,6 +5,8 @@ on:
     branches:
       - docs
 
+permissions:
+  contents: write
 
 jobs:
   build-and-publish-latex-report:
