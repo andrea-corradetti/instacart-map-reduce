@@ -7,7 +7,7 @@ import core.{Config, Purchase}
 import org.apache.spark.sql._
 
 object Main {
-  private val logger = Logger(getClass.getName)
+  private val logger = Logger("DatasetMain")
 
   def main(args: Array[String]): Unit = {
     val config: Config = getConfigOrExit(args)
@@ -61,8 +61,6 @@ object Main {
     val counts: Dataset[((Int, Int), Long)] =
       combinations.groupByKey(identity).count().sort($"count(1)".desc)
 
-    //noinspection Duplicates
-    //duplication is lexical but the types are completely different
     val writableDf: DataFrame = counts
       .map { case ((a, b), count) => (a, b, count) }
       .toDF("item1", "item2", "count")

@@ -6,7 +6,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 
 object Main {
-  private val logger = Logger(getClass.getName)
+  private val logger = Logger("RddMain")
 
   def main(args: Array[String]): Unit = {
     val config: Config = CliParser.getConfigOrExit(args)
