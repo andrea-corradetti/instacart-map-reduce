@@ -61,7 +61,8 @@ testlogs/
 /.cache-tests
 
 # Put local stuff here
-local/
+local/*
+!local/logs
 
 /bin/.cp
 
