@@ -56,13 +56,20 @@ if [[ "$ACTION" == "create" ]]; then
   LOG_DIR="$BUCKET"/spark-job-history
   N_CORES=4
 
-  PROPERTIES=spark:spark.history.fs.logDirectory="$LOG_DIR"
-  PROPERTIES+=,spark:spark.eventLog.dir="$LOG_DIR"
-  PROPERTIES+=,spark:spark.history.custom.executor.log.url.applyIncompleteApplication=false
-  # shellcheck disable=SC1083
-  PROPERTIES+=,spark:spark.history.custom.executor.log.url={{YARN_LOG_SERVER_URL}}/{{NM_HOST}}:{{NM_PORT}}/{{CONTAINER_ID}}/{{CONTAINER_ID}}/{{USER}}/{{FILE_NAME}}
-  PROPERTIES+=,spark:spark.default.parallelism=$((NUM_WORKERS * N_CORES))
+  PROPERTIES="spark:spark.history.fs.logDirectory=$LOG_DIR"
+  PROPERTIES+=",spark:spark.eventLog.dir=$LOG_DIR"
+  PROPERTIES+=",spark:spark.history.custom.executor.log.url.applyIncompleteApplication=false"
+  PROPERTIES+=",spark:spark.history.custom.executor.log.url={{YARN_LOG_SERVER_URL}}/{{NM_HOST}}:{{NM_PORT}}/{{CONTAINER_ID}}/{{CONTAINER_ID}}/{{USER}}/{{FILE_NAME}}"
 
+  # Spark on dataproc runs in client mode by default and will not detect all vcores in the cluster
+  # Running in cluster mode would make logging inconvenient for a small app
+  if [[ $NUM_WORKERS -gt 0 ]]; then
+    PROPERTIES+=",spark:spark.default.parallelism=$((NUM_WORKERS * N_CORES))"
+  else
+    PROPERTIES+=",spark:spark.spark.dynamicAllocation.enabled=false"
+    PROPERTIES+=",spark:spark.executor.cores=$N_CORES"
+    PROPERTIES+=",spark:spark.executor.instances=0"
+  fi
 
   COMMON_OPTIONS=(
     --metric-sources spark
@@ -71,7 +78,7 @@ if [[ "$ACTION" == "create" ]]; then
     --image-version "$IMAGE_VERSION"
     --master-boot-disk-size 100
     --worker-boot-disk-size 100
-    --master-machine-type n4-standard-"$N_CORES"
+    --master-machine-type n4-highmem-"$N_CORES"
     --worker-machine-type n4-standard-"$N_CORES"
     --properties "$PROPERTIES"
   )
