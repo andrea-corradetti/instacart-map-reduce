@@ -1,4 +1,4 @@
-package core
+package shared
 
 import org.apache.spark.sql.SparkSession
 import utest.{*, TestSuite}

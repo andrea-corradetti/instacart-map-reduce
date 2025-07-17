@@ -1,4 +1,4 @@
-package core
+package shared
 
 import com.typesafe.scalalogging.Logger
 import scopt.OParser

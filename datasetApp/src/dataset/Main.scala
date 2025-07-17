@@ -1,9 +1,9 @@
 package dataset
 
 import com.typesafe.scalalogging.Logger
-import core.CliParser.getConfigOrExit
-import core.Shared.sortPair
-import core.{Config, Purchase}
+import shared.CliParser.getConfigOrExit
+import shared.Shared.sortPair
+import shared.{Config, Purchase}
 import org.apache.spark.sql._
 
 object Main {

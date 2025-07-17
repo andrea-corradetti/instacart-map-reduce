@@ -1,7 +1,7 @@
 package rdd
 
 import com.typesafe.scalalogging.Logger
-import core.{CliParser, Config, Purchase, Shared}
+import shared.{CliParser, Config, Purchase, Shared}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 

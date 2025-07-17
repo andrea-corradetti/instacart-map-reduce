@@ -1,4 +1,4 @@
-package core
+package shared
 
 object Shared {
   def sortPair(itemA: Int, itemB: Int): (Int, Int) = {

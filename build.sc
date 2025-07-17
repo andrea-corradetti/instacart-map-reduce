@@ -3,7 +3,7 @@ package build
 import mill._
 import mill.scalalib._
 
-object core extends ScalaModule {
+object shared extends ScalaModule {
   def scalaVersion = "2.12.18"
 
   override def ivyDeps = Agg(
@@ -30,9 +30,9 @@ object datasetApp extends SparkAppModule {
 }
 
 trait SparkAppModule extends ScalaModule {
-  def scalaVersion = core.scalaVersion
+  def scalaVersion = shared.scalaVersion
 
-  override def moduleDeps = Seq(core)
+  override def moduleDeps = Seq(shared)
 
   override def compileIvyDeps = Agg(
     ivy"org.apache.spark::spark-core:3.5.5",
