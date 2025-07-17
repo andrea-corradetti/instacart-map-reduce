@@ -1,0 +1,234 @@
+\documentclass[sigconf,nonacm]{acmart}
+
+% --- Packages ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{pgf}
+
+
+
+% --- Scala Listings Settings ---
+\lstset{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  breaklines=true,
+  frame=single,
+  captionpos=b,
+  columns=fullflexible
+}
+
+% --- Remove ACM metadata ---
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+% --- Title and Author ---
+\title{Instacart Co-occurrence Analysis}
+
+\author{Andrea Corradetti}
+\affiliation{%
+  \institution{University of Bologna}
+  \department{Department of Computer Science and Engineering}
+  \city{Bologna}
+  \country{Italy}
+}
+\email{andrea.corradetti2@studio.unibo.it}
+
+\begin{document}
+
+\begin{abstract}
+This report documents the implementation and evaluation of a distributed system for co-purchase analysis using Apache Spark in Scala. The RDD and Dataset APIs are compared in terms of runtime and scalability. Results are tested on Google Cloud Dataproc and show that the Dataset API consistently outperforms the RDD API.
+\end{abstract}
+
+\maketitle
+
+
+\keywords{Apache Spark, Scala, Co-occurrence Analysis, RDD, Dataset, Google Cloud Dataproc, Amdahl’s Law, Parallel Computing}
+
+% ---------------------------
+\section{Introduction}
+
+The Instacart Online Grocery Basket Analysis dataset contains detailed purchase histories of Instacart customers. This report presents the implementation and performance evaluation of a Scala application that analyzes co-purchase patterns in a simplified version of the dataset.\footnote{The original dataset includes multiple CSV files with rich metadata on users, products, and orders. In this project, a minimal version was used containing only two columns: \texttt{order\_id} and \texttt{product\_id}, likely extracted from both \texttt{order\_products\_\_train.csv} and \texttt{order\_products\_\_prior.csv}.}
+
+The application is developed using Apache Spark, follows a distributed computing approach, and is deployed on Google Cloud Dataproc. Apache Spark's newer Dataset API, as described in the official \textit{SQL Programming Guide}\footnote{\url{https://spark.apache.org/docs/latest/sql-programming-guide.html}}, is compared against the classic Resilient Distributed Dataset (RDD) interface in terms of performance.
+
+Code is available on Github.\footnote{https://github.com/andrea-corradetti/instacart-map-reduce}
+
+
+% ---------------------------
+\section{Implementation Overview}
+
+\subsection{Project Structure}
+The project consists of two independent modules, each implementing the same logic using a different Spark API. One module uses the \texttt{RDD} interface, while the other relies on the \texttt{Dataset} API. Both can be compiled and executed separately.
+
+
+
+
+\subsection{Dataset Pipeline}
+The input CSV file is parsed into a strongly typed \texttt{Dataset[Purchase]}. It is grouped by \texttt{orderId}, triggering a shuffle to co-locate all items from the same order.
+
+From each group, duplicate products are removed and all unique unordered pairs are generated using \texttt{combinations(2)}. Pairs are normalized with \texttt{sortPair} to avoid duplicates such as \texttt{(a, b)} vs. \texttt{(b, a)}.
+
+The pairs are counted via \texttt{groupByKey().count()}, sorted by frequency, and cached. This involves two more shuffles: one for aggregation and one for sorting.
+
+Output is written in parallel across multiple files. The logic is implemented in \texttt{dataset.Main}, with pair normalization handled by \texttt{shared.Shared.sortPair}.
+
+\begin{figure}[h]
+  \centering
+  \begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figs/dag-dataset.png}
+    \caption{Dataset pipeline DAG}
+    \label{fig:dag-dataset}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figs/dag-rdd.png}
+    \caption{RDD pipeline DAG}
+    \label{fig:dag-rdd}
+  \end{subfigure}
+  \caption{Execution DAGs for Dataset (left) and RDD (right) pipelines. The stages consist of reading, grouping, reducing, and sorting}
+  \label{fig:dag-side-by-side}
+\end{figure}
+
+
+
+\subsection{RDD Pipeline}
+The RDD version follows the same logic as the Dataset pipeline, but uses lower-level operations. After mapping purchases to \texttt{(orderId, itemId)}, data is grouped by key and unordered item pairs are generated per order using \texttt{toSeq.combinations(2)} and normalized.
+
+Co-occurrence counts are aggregated with \texttt{reduceByKey}, then sorted by frequency using \texttt{sortBy}. The output is a sorted \texttt{RDD[(item1, item2, count)]}. The implementation resides in \texttt{rdd.Main} and reuses the same shared utilities.
+
+\subsection{Comparison}
+Both implementations produce the same output and follow the same dataflow: grouping, pair generation, aggregation, and sorting. The Dataset API offers higher-level abstractions and benefits from Catalyst optimizations, while the RDD version provides more explicit control over each step.
+
+% ---------------------------
+\section{Cluster Configuration}
+
+Experiments were executed on Google Cloud Dataproc using static clusters. Each cluster was configured with the following settings:
+
+\begin{itemize}
+  \item \textbf{Region:} \texttt{europe-west8}
+  \item \textbf{Image version:} \texttt{2.2-debian11}
+  \item \textbf{Metric sources:} \texttt{spark}
+  \item \textbf{Component Gateway:} Enabled
+  \item \textbf{Master machine type:} \texttt{n4-highmem-4}
+  \item \textbf{Worker machine type:} \texttt{n4-standard-4}
+  \item \textbf{Boot disk size:} 100 GB (for both master and workers)
+\end{itemize}
+
+\paragraph*{Note.}
+Dataproc submits jobs in \texttt{client} mode by default, rather than \texttt{cluster} mode, unless explicitly configured otherwise~\cite{dataproc-output}. 
+Because of this, the property \texttt{spark.default.parallelism} may not reflect the actual number of vCPUs available across the cluster~\cite{spark-config}. 
+To ensure correct partitioning of the input CSV file when using RDDs, this value must be set manually at cluster creation time to match the total number of available vCores.
+
+By default, Spark on Dataproc uses dynamic allocation and launches one executor per two vCores~\cite{dataproc-dynalloc}. In single-node mode, we disable dynamic allocation, set the number of executor instances to zero, and assign four cores per executor. This forces a single executor thread and prevents memory pressure from co-locating the driver and multiple executors on a four-core machine.
+
+% ---------------------------
+\section{Performance Comparison}
+\subsection{Metrics: Speedup and Efficiency}
+We measure scalability using speedup \( S(n) = \frac{T(1)}{T(n)} \) and strong scaling efficiency \( \text{SSE}(n) = \frac{S(n)}{n} \), where \( T(n) \) is the runtime on \( n \) workers. These metrics help quantify how performance improves as more resources are added.
+
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\caption{RDD vs Dataset Runtime on Dataproc}
+\label{tab:rdd-vs-dataset}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+\textbf{Workers} & \textbf{RDD Runtime} & \textbf{Dataset Runtime} \\
+\midrule
+1 (single-node) & 9 min 2 sec   & 5 min 12 sec \\
+2               & 5 min 14 sec  & 2 min 56 sec \\
+3               & 3 min 55 sec  & 2 min 16 sec \\
+4               & 3 min 21 sec  & 2 min 3 sec  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \caption{RDD Performance Metrics}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{Workers} & \textbf{Runtime (s)} & \textbf{Speedup} & \textbf{SSE} \\
+    \midrule
+    1 (single-node) & 542 & 1.00 & 1.00 \\
+    2 & 314 & 1.73 & 0.86 \\
+    3 & 235 & 2.31 & 0.77 \\
+    4 & 201 & 2.70 & 0.68 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+  \centering
+  \caption{Dataset Performance Metrics}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{Workers} & \textbf{Runtime (s)} & \textbf{Speedup} & \textbf{SSE} \\
+    \midrule
+    1 (single-node) & 312 & 1.00 & 1.00 \\
+    2 & 176 & 1.77 & 0.88 \\
+    3 & 136 & 2.29 & 0.76 \\
+    4 & 123 & 2.54 & 0.63 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Discussion}
+The Dataset API consistently outperformed the RDD-based pipeline, benefiting from Catalyst query optimization and efficient memory handling. While both approaches exhibit improved runtimes as more workers are added, scaling is sublinear.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{figs/dataproc-history.png}
+  \caption{Screenshot of Spark job execution results showing runtime.}
+  \label{fig:job-results}
+\end{figure}
+
+
+Both implementations perform the same number of shuffles and follow equivalent logical steps. Local testing also showed negligible performance differences when manually specifying a Partitioner before groupBy compared to relying on Spark's default behavior. This is expected, as groupBy internally applies a partitioner, and data must be shuffled once in either case.
+
+
+% ---------------------------
+\section{Conclusion}
+This project implemented and compared co-purchase analysis using Spark’s RDD and Dataset APIs on the Instacart dataset. The Dataset API proved more concise and slightly faster, benefiting from Spark’s internal query optimizations. While both pipelines scaled reasonably well up to 4 workers, speedup was sublinear, and efficiency decreased with more nodes—reflecting typical limits of parallel processing.
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.9\linewidth}{!}{\input{plots/runtime.pgf}}
+  \caption{Runtime comparison}
+  \label{fig:runtime}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.9\linewidth}{!}{\input{plots/speedup.pgf}}
+  \caption{Speedup over baseline}
+  \label{fig:speedup}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \resizebox{0.9\linewidth}{!}{\input{plots/sse.pgf}}
+  \caption{Strong scaling efficiency}
+  \label{fig:sse}
+\end{figure}
+
+
+% ---------------------------
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
