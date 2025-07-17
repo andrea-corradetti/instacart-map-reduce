@@ -59,6 +59,7 @@ PROPERTIES=spark.hadoop.mapreduce.outputcommitter.factory.class=org.apache.hadoo
 PROPERTIES+=,spark.hadoop.mapreduce.fileoutputcommitter.marksuccessfuljobs=false
 
 ARGS=(
+  --project "$PROJECT"
   --cluster "$CLUSTER_NAME"
   --region "$REGION"
   --jar "$JAR_PATH"

@@ -74,6 +74,7 @@ if [[ "$ACTION" == "create" ]]; then
   COMMON_OPTIONS=(
     --metric-sources spark
     --enable-component-gateway
+    --project "$PROJECT"
     --region "$REGION"
     --image-version "$IMAGE_VERSION"
     --master-boot-disk-size 100
