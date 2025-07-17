@@ -36,13 +36,23 @@ The compiled JAR will be created under `out/<module>/assembly.dest/out.jar`
 ## Running locally
 
 ```bash
+# Dataset Application
 spark-submit \
---class dataset.Main \  # or rdd.Main
---properties-files config/spark.conf \  # enables logging
---conf spark.master="local[*]" \
-out/datasetApp/assembly.dest/out.jar \  # or out/rddApp/assembly.dest/out.jar 
---input path/to/order_products.csv \
---output path/to/output_dir
+  --class dataset.Main \
+  --properties-file config/spark.conf \
+  --conf spark.master="local[*]" \
+  out/datasetApp/assembly.dest/out.jar \
+  --input path/to/order_products.csv \
+  --output path/to/output_dir
+
+# Rdd Application
+spark-submit \
+  --class rdd.Main \
+  --properties-file config/spark.conf \
+  --conf spark.master="local[*]" \
+  out/rddApp/assembly.dest/out.jar \
+  --input path/to/order_products.csv \
+  --output path/to/output_dir
 ```
 
 ## Running on Google Cloud Dataproc
