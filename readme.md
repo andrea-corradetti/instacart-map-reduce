@@ -3,7 +3,7 @@
 This project implements and benchmarks co-purchase analysis using Apache Spark in Scala. 
 It compares the performance and scalability of Spark's RDD and Dataset APIs on a simplified version of the [Instacart Online Grocery Shopping Dataset](https://www.instacart.com/datasets/grocery-shopping-2017).
 
-[Project report available here.]()
+[Project report available here.](https://andrea-corradetti.github.io/instacart-map-reduce/report/main.pdf)
 
 ---
 
