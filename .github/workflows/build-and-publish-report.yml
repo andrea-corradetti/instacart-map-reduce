@@ -5,6 +5,7 @@ on:
     branches:
       - docs
 
+
 jobs:
   build-and-publish-latex-report:
     runs-on: ubuntu-latest
@@ -17,7 +18,7 @@ jobs:
         with:
           root_file: main.tex
           working_directory: docs/report
-          latexmk_shell_escape: true
+          pre_compile: latexmk -C
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
