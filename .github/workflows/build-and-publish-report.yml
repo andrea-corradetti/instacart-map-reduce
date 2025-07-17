@@ -3,7 +3,7 @@ name: Build and publish report
 on:
   push:
     branches:
-      - main
+      - docs
 
 jobs:
   build-and-publish-latex-report:
@@ -15,8 +15,9 @@ jobs:
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v3
         with:
-          root_file: report.tex
+          root_file: main.tex
           working_directory: docs/report
+          latexmk_shell_escape: true
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
