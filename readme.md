@@ -13,7 +13,8 @@ It compares the performance and scalability of Spark's RDD and Dataset APIs on a
 - `rddApp/` — Co-occurrence analysis using the RDD API
 - `datasetApp/` — Co-occurrence analysis using the Dataset API
 - `scripts/` — Bash scripts for local/cloud deployment
-- `local/` —  Configuration for local running
+- `conf/` —  Configuration for local running
+- `local/logs` — Default location for logs 
 
 ---
 
