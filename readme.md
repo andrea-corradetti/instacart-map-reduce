@@ -90,3 +90,11 @@ scripts/submit-job.sh --cluster <cluster-name> -- --input <path/to/input> --outp
 ```
 
 The application will overwrite the destination dir.
+
+### 5. Remember to delete your cluster and bucket
+To delete your custer run:
+```bash
+scripts/cluster.sh delete --name <cluster-name>
+```
+
+To delete your bucket, check the [Dataproc Storage docs.](https://cloud.google.com/sdk/gcloud/reference/dataproc/clusters/delete)
