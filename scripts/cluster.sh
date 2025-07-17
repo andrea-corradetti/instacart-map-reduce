@@ -101,6 +101,7 @@ elif [[ "$ACTION" == "delete" ]]; then
   echo "🗑️ Deleting cluster '$CLUSTER_NAME'..."
 
   gcloud dataproc clusters delete "$CLUSTER_NAME" \
+    --project "$PROJECT" \
     --region "$REGION" \
     --quiet
 
